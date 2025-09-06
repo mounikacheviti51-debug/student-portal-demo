@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>InspoDash</title>
+  <style>
+    body {
+      margin: 0; padding: 2em;
+      font-family: sans-serif;
+      color: white;
+      background: url('https://source.unsplash.com/1600x900/?nature') no-repeat center/cover;
+    }
+    .box {
+      background: rgba(0,0,0,0.5);
+      padding: 2em;
+      border-radius: 10px;
+      max-width: 500px;
+      margin: auto;
+    }
+    input, button { padding: 0.5em; margin-top: 0.5em; }
+    ul { padding: 0; list-style: none; }
+    li { margin: 5px 0; display: flex; justify-content: space-between; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>🌟 InspoDash</h2>
+    <p id="quote">Loading quote...</p>
+
+    <h3>📝 To-Do</h3>
+    <input id="todoInput" placeholder="Add task" />
+    <button onclick="addTodo()">Add</button>
+    <ul id="todoList"></ul>
+
+    <h3>⏱️ Timer</h3>
+    <p id="timer">25:00</p>
+    <button onclick="start()">▶</button>
+    <button onclick="pause()">⏸</button>
+    <button onclick="reset()">🔄</button>
+  </div>
+
+  <script>
+    // Quote
+    fetch('https://api.quotable.io/random')
+      .then(r => r.json())
+      .then(d => quote.innerText = `"${d.content}" — ${d.author}`)
+      .catch(() => quote.innerText = 'Quote failed.');
+
+    // To-Do
+    const todoInput = document.getElementById('todoInput');
+    const todoList = document.getElementById('todoList');
+    function load() {
+      let todos = JSON.parse(localStorage.getItem('todos')) || [];
+      todoList.innerHTML = '';
+      todos.forEach((t, i) => {
+        let li = document.createElement('li');
+        li.innerHTML = `${t} <button onclick="del(${i})">❌</button>`;
+        todoList.appendChild(li);
+      });
+    }
+    function addTodo() {
+      let val = todoInput.value.trim();
+      if (!val) return;
+      let todos = JSON.parse(localStorage.getItem('todos')) || [];
+      todos.push(val);
+      localStorage.setItem('todos', JSON.stringify(todos));
+      todoInput.value = '';
+      load();
+    }
+    function del(i) {
+      let todos = JSON.parse(localStorage.getItem('todos')) || [];
+      todos.splice(i, 1);
+      localStorage.setItem('todos', JSON.stringify(todos));
+      load();
+    }
+    load();
+
+    // Timer
+    let time = 25 * 60, t, running = false;
+    function update() {
+      let m = String(Math.floor(time / 60)).padStart(2, '0');
+      let s = String(time % 60).padStart(2, '0');
+      timer.innerText = `${m}:${s}`;
+    }
+    function start() {
+      if (running) return;
+      running = true;
+      t = setInterval(() => {
+        if (time > 0) { time--; update(); }
+        else { clearInterval(t); alert("Done!"); }
+      }, 1000);
+    }
+    function pause() { clearInterval(t); running = false; }
+    function reset() { pause(); time = 25 * 60; update(); }
+    update();
+  </script>
+</body>
+</html>
